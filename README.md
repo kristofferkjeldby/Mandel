@@ -1,0 +1,2 @@
+# Mandel
+Simple Mandelbrot explorer
