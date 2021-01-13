@@ -1,7 +1,7 @@
-﻿using System.Drawing;
-
-namespace Mandel.Models
+﻿namespace Mandel.Models
 {
+    using System.Drawing;
+
     public class Coordinate
     {
         public double X { get; set; }

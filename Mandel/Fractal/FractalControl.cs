@@ -2,16 +2,13 @@
 {
     using Mandel.Colors.Models;
     using Mandel.Extensions;
-    using Mandel.Math.Models;
     using Mandel.Models;
-    using System.Linq;
     using System.Drawing;
     using System.Windows.Forms;
 
 
     public class FractalControl
     {
-        private Area zoomedArea;
         private Area zoomedPictureBoxArea;
         private Area selectionArea;
         private Brush selectionBrush;
@@ -25,12 +22,17 @@
 
         public Gradient Gradient { get; set; }
 
-        public FractalControl(PictureBox pictureBox, ISet set, TrackBar loopsTrackBar, Gradient gradient)
+        public TextBox LimitTextBox { get; set; }
+
+        public Area Area { get; set; }
+
+        public FractalControl(PictureBox pictureBox, ISet set, TrackBar loopsTrackBar, Gradient gradient, TextBox limitTextBox)
         {
             PictureBox = pictureBox;
             Set = set;
             LoopsTrackBar = loopsTrackBar;
             Gradient = gradient;
+            LimitTextBox = limitTextBox;
 
             // Setup selection
             selectionArea = new Area();
@@ -38,14 +40,30 @@
             selectionBrush = new SolidBrush(Color.FromArgb(20, 255, 255, 255));
 
             // Setup zoom
-            zoomedArea = new Area(Constants.Min, Constants.Max);
+            Area = new Area(Constants.Min, Constants.Max);
             zoomedPictureBoxArea = PictureBox.GetArea();
         }
 
         public void Draw()
         {
-            var pictureBoxArea = PictureBox.GetArea();
-            var values = new double?[PictureBox.Width, PictureBox.Height];
+            PictureBox.Image = GetBitmap(PictureBox.Width, PictureBox.Height);
+            zoomedPictureBoxArea = new Area(new Coordinate(0, 0), new Coordinate(PictureBox.Image.Width, PictureBox.Image.Height));
+        }
+
+        internal void StartSelection(Coordinate coordinate)
+        {
+            selectionStart = coordinate;
+        }
+
+        public Bitmap GetBitmap(int width, int height)
+        {
+            var values = new double?[width, height];
+            var area = new Area(new Coordinate(0, 0), new Coordinate(width, height));
+            var limit = 2d;
+            if (double.TryParse(LimitTextBox.Text, out var customLimit))
+            {
+                limit = customLimit;
+            }
 
             double? minValue = null;
             double? maxValue = null;
@@ -55,8 +73,8 @@
                 for (var x = 0; x < values.GetLength(0); x++)
                 {
                     var pictureCoordinate = new Coordinate(x, y);
-                    var coordinate = pictureCoordinate.Transform(pictureBoxArea, zoomedArea);
-                    var value = Set.GetValue(coordinate, LoopsTrackBar.Value); 
+                    var c = pictureCoordinate.Transform(area, Area).ToComplex();
+                    var value = Set.GetValue(c, LoopsTrackBar.Value, limit);
 
                     if (value.HasValue)
                     {
@@ -71,42 +89,52 @@
                 }
             }
 
-            for (var y = 0; y < values.GetLength(1); y++)
+            if (Constants.NoNull)
             {
-                for (var x = 0; x < values.GetLength(0); x++)
+                for (var y = 0; y < values.GetLength(1); y++)
                 {
-                    var oldValue = values[x, y];
-
-                    if (oldValue.HasValue)
+                    for (var x = 0; x < values.GetLength(0); x++)
                     {
-                        values[x, y] = (oldValue - minValue) / (maxValue - minValue);
+                        if (!values[x, y].HasValue)
+                        {
+                            values[x, y] = values[x-1, y];
+                        }
                     }
                 }
             }
 
-            Bitmap bitmap = new Bitmap(PictureBox.Width, PictureBox.Height);
-            var stepSize = zoomedArea.Size / pictureBoxArea.Size;
+            if (Constants.Calibrate)
+            { 
+                for (var y = 0; y < values.GetLength(1); y++)
+                {
+                    for (var x = 0; x < values.GetLength(0); x++)
+                    {
+                        var oldValue = values[x, y];
+
+                        if (oldValue.HasValue)
+                        {
+                            values[x, y] = (oldValue - minValue) / (maxValue - minValue);
+                        }
+                    }
+                }
+            }
+
+            Bitmap bitmap = new Bitmap(width, height);
+            var stepSize = Area.Size / area.Size;
 
             for (var y = 0; y < values.GetLength(1); y++)
             {
                 for (var x = 0; x < values.GetLength(0); x++)
                 {
                     var pictureCoordinate = new Coordinate(x, y);
-                    var coordinate = pictureCoordinate.Transform(pictureBoxArea, zoomedArea);
+                    var coordinate = pictureCoordinate.Transform(area, Area);
                     var value = values[x, y];
                     var color = Gradient.GetColor(value);
                     bitmap.SetPixel((int)pictureCoordinate.X, (int)pictureCoordinate.Y, color);
                 }
             }
 
-            zoomedPictureBoxArea = new Area(new Coordinate(0, 0), new Coordinate(bitmap.Width, bitmap.Height));
-
-            PictureBox.Image = bitmap;
-        }
-
-        internal void StartSelection(Coordinate coordinate)
-        {
-            selectionStart = coordinate;
+            return bitmap;
         }
 
         public void SetSelection(Coordinate selectionEnd)
@@ -152,7 +180,7 @@
                 PictureBox.Image = bitmap.Clone(newZoomedPictureBoxRetangle, image.PixelFormat);
                 image.Dispose();
 
-                zoomedArea = newZoomedPictureBoxArea.Transform(zoomedPictureBoxArea, zoomedArea);
+                Area = newZoomedPictureBoxArea.Transform(zoomedPictureBoxArea, Area);
 
                 zoomedPictureBoxArea = new Area(new Coordinate(0, 0), new Coordinate(zoomedBitmap.Width, zoomedBitmap.Height));
 

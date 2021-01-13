@@ -48,7 +48,9 @@
   <ItemGroup>
     <Compile Include="Colors\GradientControl.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="Math\Mandelbrot.cs" />
+    <Compile Include="Generators\Linear.cs" />
+    <Compile Include="Sets\Julia.cs" />
+    <Compile Include="Sets\Mandelbrot.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Form.cs">
       <SubType>Form</SubType>
@@ -59,7 +61,8 @@
     <Compile Include="Colors\Models\Gradient.cs" />
     <Compile Include="Colors\Models\ColorPoint.cs" />
     <Compile Include="Fractal\FractalControl.cs" />
-    <Compile Include="Math\Models\ISet.cs" />
+    <Compile Include="Models\Complex.cs" />
+    <Compile Include="Models\ISet.cs" />
     <Compile Include="Models\Area.cs" />
     <Compile Include="Models\Coordinate.cs" />
     <Compile Include="Program.cs" />

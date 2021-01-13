@@ -8,17 +8,20 @@
     {
         public List<ColorPoint> ColorPoints { get; set; }
 
-        public Gradient(Color startColor, Color endColor)
+        public Color NullColor { get; set; }
+
+        public Gradient(Color startColor, Color endColor, Color nullColor)
         {
             ColorPoints = new List<ColorPoint>();
             ColorPoints.Add(new ColorPoint(startColor, 0, true));
             ColorPoints.Add(new ColorPoint(endColor, 1, true));
+            NullColor = nullColor;
         }
 
         public Color GetColor(double? value)
         {
             if (!value.HasValue || value < 0 || value > 1)
-                return Color.Black;
+                return NullColor;
 
             var match = ColorPoints.FirstOrDefault(c => c.Value.Equals(value));
             if (match != null)

@@ -19,5 +19,10 @@
         {
             return new Area(new Coordinate(0, 0), new Coordinate(pictureBox.Width, pictureBox.Height));
         }
+
+        public static Complex ToComplex(this Coordinate coordinate)
+        {
+            return new Complex(coordinate.X, coordinate.Y);
+        }
     }
 }
