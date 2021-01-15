@@ -65,9 +65,6 @@
                 limit = customLimit;
             }
 
-            double? minValue = null;
-            double? maxValue = null;
-
             for (var y = 0; y < values.GetLength(1); y++)
             {
                 for (var x = 0; x < values.GetLength(0); x++)
@@ -75,49 +72,12 @@
                     var pictureCoordinate = new Coordinate(x, y);
                     var c = pictureCoordinate.Transform(area, Area).ToComplex();
                     var value = Set.GetValue(c, LoopsTrackBar.Value, limit);
-
-                    if (value.HasValue)
-                    {
-                        if (!maxValue.HasValue || value.Value > maxValue)
-                            maxValue = value;
-
-                        if (!minValue.HasValue || value.Value < minValue)
-                            minValue = value;
-                    }
-
                     values[x, y] = value;
                 }
             }
 
-            if (Constants.NoNull)
-            {
-                for (var y = 0; y < values.GetLength(1); y++)
-                {
-                    for (var x = 0; x < values.GetLength(0); x++)
-                    {
-                        if (!values[x, y].HasValue)
-                        {
-                            values[x, y] = values[x-1, y];
-                        }
-                    }
-                }
-            }
-
-            if (Constants.Calibrate)
-            { 
-                for (var y = 0; y < values.GetLength(1); y++)
-                {
-                    for (var x = 0; x < values.GetLength(0); x++)
-                    {
-                        var oldValue = values[x, y];
-
-                        if (oldValue.HasValue)
-                        {
-                            values[x, y] = (oldValue - minValue) / (maxValue - minValue);
-                        }
-                    }
-                }
-            }
+            if (Constants.Normalize)
+                values.Normalize();
 
             Bitmap bitmap = new Bitmap(width, height);
             var stepSize = Area.Size / area.Size;

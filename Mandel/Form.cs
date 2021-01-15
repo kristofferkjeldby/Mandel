@@ -10,6 +10,7 @@
     using Mandel.Sets;
     using System.Drawing.Imaging;
     using Mandel.Generators;
+    using Mandel.Extensions;
 
     public partial class Form : System.Windows.Forms.Form
     {
@@ -27,14 +28,15 @@
         private void Form_Load(object sender, EventArgs e)
         {
             Reset();
+            fractalControl.Area = new Area(new Coordinate(-0.741528684186793, -0.186572693657556), 10, 6);
             DrawGradient();
             DrawFractal();
         }
 
         private void Reset()
         {
-            gradient = new Gradient(Color.FromArgb(0, 20, 0), Color.Yellow, Color.Black);
-            gradient.ColorPoints.Add(new ColorPoint(Color.Red, 0.4, false));
+            gradient = new Gradient(Color.DarkBlue, Color.Yellow, Color.Black);
+            gradient.ColorPoints.Add(new ColorPoint(Color.Red, 0.3, false));
             gradientControl = new GradientControl(GradientPictureBox, gradient);
             fractalControl = new FractalControl(FractalPictureBox, set, LoopsTrackBar, gradient, LimitTextBox);
 
@@ -110,29 +112,25 @@
 
         private void AnimateButton_Click(object sender, EventArgs e)
         {
-            var steps = 500;
+            var steps = 2000;
 
-            var loops = new Linear(100, 300, steps).GetEnumerator();
-            var minX = new Linear(-2.1, -0.741528684186793, steps).GetEnumerator();
-            var minY = new Linear(-1.3, -0.186572693657556, steps).GetEnumerator();
-            var maxX = new Linear(1, -0.741089987866163, steps).GetEnumerator();
-            var maxY = new Linear(1.3, -0.186096669790823, steps).GetEnumerator();
+            LoopsTrackBar.Maximum = 100000;
 
+            var loops = new Linear(50, 10000, steps).GetEnumerator();
+            var center = new Coordinate(-0.104892712882917, 0.927903647312639);
+            var factor = 0.93;
             for (int n = 0; n < steps; n++)
             {
                 loops.MoveNext();
-                minX.MoveNext();
-                minY.MoveNext();
-                maxX.MoveNext();
-                maxY.MoveNext();
-
-                fractalControl.Area = new Area(new Coordinate(minX.Current, minY.Current), new Coordinate(maxX.Current, maxY.Current));
+                fractalControl.Area = fractalControl.Area.Resize(center, factor);
                 LoopsTrackBar.Value = (int)loops.Current;
+                var bitmap = fractalControl.GetBitmap(1920, 1080);
 
-                var bitmap = fractalControl.GetBitmap(192, 108);
-                bitmap.Save($"mandelbrot{n}.jpg", ImageFormat.Png);
+                var chars = steps.ToString().Length - n.ToString().Length;
+                var prefix = new string('0', chars);
+
+                bitmap.Save($"mandelbrot{prefix}{n}.jpg", ImageFormat.Png);
             }
-
         }
     }
 }

@@ -12,8 +12,6 @@
 
         public Linear(double start, double end, int steps)
         {
-
-
             Value = Start = start;
             End = end;
             StepSize = (end - start) / steps;

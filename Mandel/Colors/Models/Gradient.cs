@@ -20,7 +20,7 @@
 
         public Color GetColor(double? value)
         {
-            if (!value.HasValue || value < 0 || value > 1)
+            if (!value.HasValue || value < 0 || value > 1 || double.IsNaN(value.Value))
                 return NullColor;
 
             var match = ColorPoints.FirstOrDefault(c => c.Value.Equals(value));
