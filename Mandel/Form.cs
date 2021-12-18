@@ -28,7 +28,7 @@
         private void Form_Load(object sender, EventArgs e)
         {
             Reset();
-            fractalControl.Area = new Area(new Coordinate(-0.741528684186793, -0.186572693657556), 10, 6);
+            fractalControl.Area = new Area(Constants.Min, Constants.Max);
             DrawGradient();
             DrawFractal();
         }
